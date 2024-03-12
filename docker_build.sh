@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t starwitorg/sae-my-stage:$(poetry version --short) .
+docker build -t starwitorg/sae-redis-writer:$(poetry version --short) .
