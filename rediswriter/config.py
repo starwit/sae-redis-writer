@@ -10,9 +10,15 @@ class RedisConfig(BaseModel):
     stream_id: str = 'stream1'
     input_stream_prefix: str = 'objecttracker'
 
+class TargetRedisConfig(BaseModel):
+    host: str
+    port: conint(ge=1, le=65536)
+    stream_key: str = 'output'
+
 class RedisWriterConfig(BaseSettings):
     log_level: LogLevel = LogLevel.WARNING
     redis: RedisConfig = RedisConfig()
+    target_redis: TargetRedisConfig = TargetRedisConfig()
 
     model_config = SettingsConfigDict(env_nested_delimiter='__')
 

@@ -45,7 +45,8 @@ def run_stage():
 
     consume = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, 
                             stream_keys=[f'{CONFIG.redis.input_stream_prefix}:{CONFIG.redis.stream_id}'])
-    publish = RedisPublisher(CONFIG.redis.host, CONFIG.redis.port)
+    
+    publish = RedisPublisher(CONFIG.target_redis.host, CONFIG.target_redis.port)
     
     with consume, publish:
         for stream_key, proto_data in consume():
@@ -55,8 +56,6 @@ def run_stage():
             if stream_key is None:
                 continue
 
-            stream_id = stream_key.split(':')[1]
-
             FRAME_COUNTER.inc()
 
             output_proto_data = redis_writer.get(proto_data)
@@ -65,5 +64,5 @@ def run_stage():
                 continue
             
             with REDIS_PUBLISH_DURATION.time():
-                publish(f'{CONFIG.redis.output_stream_prefix}:{stream_id}', output_proto_data)
+                publish(CONFIG.target_redis.stream_key, output_proto_data)
             

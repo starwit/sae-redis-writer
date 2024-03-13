@@ -1,8 +1,8 @@
 import logging
-from typing import Any, Dict, NamedTuple
+from typing import Any
 
-from prometheus_client import Counter, Histogram, Summary
-from visionapi.messages_pb2 import BoundingBox, SaeMessage
+from prometheus_client import Histogram, Summary
+from visionapi.messages_pb2 import SaeMessage, VideoFrame
 
 from .config import RedisWriterConfig
 
@@ -27,10 +27,22 @@ class RedisWriter:
     def get(self, input_proto):
         sae_msg = self._unpack_proto(input_proto)
 
-        # Your implementation goes (mostly) here
-        logger.warning('Received SAE message from pipeline')
+        sanitized_msg = self._remove_frame_data(sae_msg)
 
-        return self._pack_proto(sae_msg)
+        return self._pack_proto(sanitized_msg)
+    
+    def _remove_frame_data(self, sae_msg: SaeMessage) -> SaeMessage:
+        # Use a whitelist approach, to make 100% sure that no frame_data is leaked
+        source_id = sae_msg.frame.source_id
+        timestamp_utc_ms = sae_msg.frame.timestamp_utc_ms
+
+        sae_msg.ClearField('frame')
+
+        # Add back some metadata we need downstream
+        sae_msg.frame.source_id = source_id
+        sae_msg.frame.timestamp_utc_ms = timestamp_utc_ms
+
+        return sae_msg
         
     @PROTO_DESERIALIZATION_DURATION.time()
     def _unpack_proto(self, sae_message_bytes):
