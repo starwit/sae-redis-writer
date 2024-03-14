@@ -37,6 +37,14 @@ class Sender:
 
         self._stop_event = Event()
         self._sender_thread = Thread(target=self._run)
+
+        self._redis_args = {
+            'ssl': True,
+            'ssl_certfile': 'certs/client.crt',
+            'ssl_keyfile': 'certs/client.key',
+            'ssl_cert_reqs': 'required',
+            'ssl_ca_certs': 'certs/ca.crt',
+        } if self._config.tls else {}
         
     def publish(self, msg_bytes):
         if len(self._buffer) == self._buffer.maxlen:
@@ -53,7 +61,8 @@ class Sender:
         publisher = RedisPublisher(
             host=self._config.host,
             port=self._config.port,
-            stream_maxlen=self._config.target_stream_maxlen
+            stream_maxlen=self._config.target_stream_maxlen,
+            **self._redis_args
         )
 
         with publisher as publish:

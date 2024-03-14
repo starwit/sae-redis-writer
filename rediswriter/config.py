@@ -16,6 +16,7 @@ class TargetRedisConfig(BaseModel):
     stream_key: str = 'output'
     buffer_length: conint(ge=1) = 10
     target_stream_maxlen: conint(ge=1) = 100
+    tls: bool = False
 
 class RedisWriterConfig(BaseSettings):
     log_level: LogLevel = LogLevel.WARNING
