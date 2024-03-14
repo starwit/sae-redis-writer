@@ -14,7 +14,7 @@ class TargetRedisConfig(BaseModel):
     host: str
     port: conint(ge=1, le=65536)
     stream_key: str = 'output'
-    buffer_length: conint(ge=1) = 1
+    buffer_length: conint(ge=1) = 10
     target_stream_maxlen: conint(ge=1) = 100
 
 class RedisWriterConfig(BaseSettings):
