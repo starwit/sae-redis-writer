@@ -4,17 +4,15 @@ import threading
 
 from prometheus_client import Counter, Histogram, start_http_server
 from visionlib.pipeline.consumer import RedisConsumer
-from visionlib.pipeline.publisher import RedisPublisher
 
 from .config import RedisWriterConfig
 from .rediswriter import RedisWriter
+from .sender import Sender
 
 logger = logging.getLogger(__name__)
 
 PROMETHEUS_METRICS_PORT = 8000
 
-REDIS_PUBLISH_DURATION = Histogram('redis_writer_target_redis_publish_duration', 'The time it takes to push a message onto the Redis stream',
-                                   buckets=(0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25))
 FRAME_COUNTER = Counter('redis_writer_frame_counter', 'How many frames have been consumed from the Redis input stream')
 
 def run_stage():
@@ -43,12 +41,12 @@ def run_stage():
 
     redis_writer = RedisWriter(CONFIG)
 
-    consume = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, 
-                            stream_keys=[f'{CONFIG.redis.input_stream_prefix}:{CONFIG.redis.stream_id}'])
+    consumer = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, 
+                            stream_keys=[f'{CONFIG.redis.input_stream_prefix}:{id}' for id in CONFIG.redis.stream_ids])
     
-    publish = RedisPublisher(CONFIG.target_redis.host, CONFIG.target_redis.port)
+    sender = Sender(CONFIG)
     
-    with consume, publish:
+    with consumer as consume, sender as send:
         for stream_key, proto_data in consume():
             if stop_event.is_set():
                 break
@@ -63,6 +61,4 @@ def run_stage():
             if output_proto_data is None:
                 continue
             
-            with REDIS_PUBLISH_DURATION.time():
-                publish(CONFIG.target_redis.stream_key, output_proto_data)
-            
+            send(output_proto_data)

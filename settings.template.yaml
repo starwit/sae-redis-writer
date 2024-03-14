@@ -2,9 +2,12 @@ log_level: DEBUG
 redis:
   host: redis
   port: 6379
-  stream_id: stream1
+  stream_ids: 
+    - stream1
   input_stream_prefix: objecttracker
 target_redis:
   host: redis
   port: 6379
   stream_key: output
+  buffer_length: 1
+  target_stream_maxlen: 100
