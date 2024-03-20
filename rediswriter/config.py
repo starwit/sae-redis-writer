@@ -7,13 +7,12 @@ from typing import List
 class RedisConfig(BaseModel):
     host: str = 'localhost'
     port: conint(ge=1, le=65536) = 6379
-    stream_ids: List[str] = ['stream1']
     input_stream_prefix: str = 'objecttracker'
 
 class TargetRedisConfig(BaseModel):
     host: str
     port: conint(ge=1, le=65536)
-    stream_key: str = 'output'
+    output_stream_prefix: str = 'output'
     buffer_length: conint(ge=1) = 10
     target_stream_maxlen: conint(ge=1) = 100
     tls: bool = False
@@ -22,6 +21,7 @@ class RedisWriterConfig(BaseSettings):
     log_level: LogLevel = LogLevel.WARNING
     redis: RedisConfig = RedisConfig()
     target_redis: TargetRedisConfig
+    stream_ids: List[str] = ['stream1']
 
     model_config = SettingsConfigDict(env_nested_delimiter='__')
 

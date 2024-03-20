@@ -1,9 +1,8 @@
 import logging
-import sys
 import time
 from collections import deque
 from threading import Event, Thread
-from typing import Any
+from typing import Deque, NamedTuple
 
 import backoff
 from log_rate_limit import StreamRateLimitFilter
@@ -28,12 +27,18 @@ def _on_backoff(_):
     BACKOFF_COUNTER.inc()
 
 
+class BufferEntry(NamedTuple):
+    stream_key: str
+    msg_bytes: bytes
+
+
 class Sender:
     def __init__(self, config: RedisWriterConfig) -> None:
         self._config = config.target_redis
+        self._stream_ids = config.stream_ids
         logger.setLevel(config.log_level.value)
 
-        self._buffer = deque(maxlen=self._config.buffer_length)
+        self._buffer: Deque[BufferEntry] = deque(maxlen=self._config.buffer_length)
 
         self._stop_event = Event()
         self._sender_thread = Thread(target=self._run)
@@ -46,16 +51,16 @@ class Sender:
             'ssl_ca_certs': 'certs/ca.crt',
         } if self._config.tls else {}
         
-    def publish(self, msg_bytes):
+    def _publish(self, stream_key, msg_bytes):
         if len(self._buffer) == self._buffer.maxlen:
             logger.debug(f'Message buffer full (maxlen={self._buffer.maxlen}). Discarding message.')
             DISCARD_BUFFER_COUNTER.inc()
 
-        self._buffer.append(msg_bytes)
+        self._buffer.append(BufferEntry(stream_key, msg_bytes))
 
     def __enter__(self):
         self._sender_thread.start()
-        return self.publish
+        return self._publish
     
     def _run(self):
         publisher = RedisPublisher(
@@ -68,13 +73,13 @@ class Sender:
         with publisher as publish:
             while not self._stop_event.is_set():
                 try:
-                    msg_bytes = self._buffer.popleft()
+                    entry = self._buffer.popleft()
                 except IndexError:
                     time.sleep(0.05)
                     continue
 
                 try:
-                    self._publish_with_backoff(publish, self._config.stream_key, msg_bytes)
+                    self._publish_with_backoff(publish, entry.stream_key, entry.msg_bytes)
                 except (ConnectionError, TimeoutError) as e:
                     logger.error(f'Gave up sending message', exc_info=True)
                     GIVEUP_COUNTER.inc()
@@ -90,7 +95,7 @@ class Sender:
     )
     def _publish_with_backoff(self, publish: callable, stream_key: str, msg_bytes: bytes):
         with REDIS_PUBLISH_DURATION.time():
-            publish(self._config.stream_key, msg_bytes)
+            publish(stream_key, msg_bytes)
 
     def __exit__(self, _, __, ___):
         self._stop_event.set()

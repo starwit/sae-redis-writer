@@ -42,7 +42,7 @@ def run_stage():
     redis_writer = RedisWriter(CONFIG)
 
     consumer = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, 
-                            stream_keys=[f'{CONFIG.redis.input_stream_prefix}:{id}' for id in CONFIG.redis.stream_ids])
+                            stream_keys=[f'{CONFIG.redis.input_stream_prefix}:{id}' for id in CONFIG.stream_ids])
     
     sender = Sender(CONFIG)
     
@@ -60,5 +60,7 @@ def run_stage():
 
             if output_proto_data is None:
                 continue
+
+            stream_id = stream_key.split(':')[1]
             
-            send(output_proto_data)
+            send(f'{CONFIG.target_redis.output_stream_prefix}:{stream_id}', output_proto_data)
