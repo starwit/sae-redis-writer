@@ -35,12 +35,14 @@ class RedisWriter:
         # Use a whitelist approach, to make 100% sure that no frame_data is leaked
         source_id = sae_msg.frame.source_id
         timestamp_utc_ms = sae_msg.frame.timestamp_utc_ms
+        shape = sae_msg.frame.shape
 
         sae_msg.ClearField('frame')
 
         # Add back some metadata we need downstream
         sae_msg.frame.source_id = source_id
         sae_msg.frame.timestamp_utc_ms = timestamp_utc_ms
+        sae_msg.frame.shape.CopyFrom(shape)
 
         return sae_msg
         

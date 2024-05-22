@@ -37,7 +37,7 @@ def run_stage():
 
     start_http_server(PROMETHEUS_METRICS_PORT)
 
-    logger.info(f'Starting geo mapper stage. Config: {CONFIG.model_dump_json(indent=2)}')
+    logger.info(f'Starting redis writer stage. Config: {CONFIG.model_dump_json(indent=2)}')
 
     redis_writer = RedisWriter(CONFIG)
 
