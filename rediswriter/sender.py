@@ -5,7 +5,6 @@ from threading import Event, Thread
 from typing import Deque, List, NamedTuple, Tuple
 
 import backoff
-from log_rate_limit import StreamRateLimitFilter
 from prometheus_client import Counter, Histogram, Summary
 from redis.exceptions import ConnectionError, TimeoutError
 from visionlib.pipeline.publisher import RedisPipelinePublisher
@@ -14,7 +13,6 @@ from .config import RedisWriterConfig
 
 logging.basicConfig(format='%(asctime)s %(name)-15s %(levelname)-8s %(processName)-10s %(message)s')
 logger = logging.getLogger(__name__)
-logger.addFilter(StreamRateLimitFilter(period_sec=10))
 
 BACKOFF_COUNTER = Counter('redis_writer_backoff_counter', 'How often publishing to Redis has to be backed off (i.e. retried)')
 GIVEUP_COUNTER = Counter('redis_writer_giveup_counter', 'How many messages were discarded due to exhausted retries')
@@ -22,6 +20,7 @@ DISCARD_BUFFER_COUNTER = Counter('redis_writer_discard_buffer_counter', 'How man
 REDIS_PUBLISH_DURATION = Histogram('redis_writer_target_redis_publish_duration', 'The time it takes to push a message onto the Redis stream',
                                    buckets=(0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25))
 REDIS_PUBLISH_BYTES_SENT = Summary('redis_writer_target_redis_published_bytes_estimate', 'How many bytes were sent to the Redis stream (this is estimated!)')
+REDIS_PUBLISH_MESSAGE_COUNT = Counter('redis_writer_target_redis_message_counter', 'How many messages were sent to the Redis stream')
 
 def _on_backoff(_):
     logger.debug(f'Failed to send message. Backing off...')
@@ -54,7 +53,6 @@ class Sender:
         
     def _publish(self, stream_key, msg_bytes):
         if len(self._buffer) == self._buffer.maxlen:
-            logger.debug(f'Message buffer full (maxlen={self._buffer.maxlen}). Discarding message.')
             DISCARD_BUFFER_COUNTER.inc()
 
         self._buffer.append(BufferEntry(stream_key, msg_bytes))
@@ -99,6 +97,7 @@ class Sender:
 
         if len(batch) > 0:
             REDIS_PUBLISH_BYTES_SENT.observe(batch_bytes)
+            REDIS_PUBLISH_MESSAGE_COUNT.inc(len(batch))
 
         return batch
 
