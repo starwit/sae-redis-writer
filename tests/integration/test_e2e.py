@@ -1,9 +1,9 @@
+import base64
 import random
 import subprocess
 import sys
 import time
 import uuid
-import base64
 
 import pytest
 import redis
@@ -113,10 +113,10 @@ def test_many_messages_send(writer_stage, redis_client, target_redis_client):
         sae_msg_bytes = create_sae_msg(i)
         redis_client.xadd("input:stream", {"proto_data_b64": sae_msg_bytes})
 
-    time.sleep(5)
+    time.sleep(2)
 
     # Check that the messages were written to the target redis
     messages = target_redis_client.xrange("output:stream")
     assert len(messages) == MSG_COUNT
-    # for i, message in enumerate(messages):
-    #     assert_redis_msg(i, message)
+    for i, message in enumerate(messages):
+        assert_redis_msg(i, message)
