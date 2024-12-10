@@ -4,7 +4,6 @@ from collections import deque
 from threading import Event, Thread
 from typing import Deque, List, NamedTuple, Tuple
 
-import backoff
 from prometheus_client import Counter, Histogram, Summary
 from redis.exceptions import ConnectionError, TimeoutError
 from visionlib.pipeline.publisher import RedisPipelinePublisher
@@ -22,10 +21,11 @@ REDIS_PUBLISH_DURATION = Histogram('redis_writer_target_redis_publish_duration',
 REDIS_PUBLISH_BYTES_SENT = Summary('redis_writer_target_redis_published_bytes_estimate', 'How many bytes were sent to the Redis stream (this is estimated!)')
 REDIS_PUBLISH_MESSAGE_COUNT = Counter('redis_writer_target_redis_message_counter', 'How many messages were sent to the Redis stream')
 
-def _on_backoff(_):
-    logger.debug(f'Failed to send message. Backing off...')
-    BACKOFF_COUNTER.inc()
-
+def backoff_gen(max_wait=10):
+    wait_time = 0.05
+    while True:
+        yield wait_time
+        wait_time = min(wait_time*2, max_wait)
 
 class BufferEntry(NamedTuple):
     stream_key: str
@@ -69,19 +69,35 @@ class Sender:
             **self._redis_args
         )
 
+        backoff_time = backoff_gen()
+        connection_healthy = True
+        batch = []
+
         with publisher as publish:
             while not self._stop_event.is_set():
-                batch = self._get_next_batch()
+                if connection_healthy:
+                    batch = self._get_next_batch()
                     
                 if len(batch) == 0:
                     time.sleep(0.05)
                     continue
 
                 try:
-                    self._publish_with_backoff(publish, batch)
+                    with REDIS_PUBLISH_DURATION.time():
+                        publish(batch)
+                    if not connection_healthy:
+                        connection_healthy = True
+                        backoff_time = backoff_gen()
+                        logger.info(f'Connection to {self._config.host}:{self._config.port} healthy. Resuming.')
+                        
                 except (ConnectionError, TimeoutError) as e:
-                    logger.error(f'Gave up sending message', exc_info=True)
-                    GIVEUP_COUNTER.inc()
+                    connection_healthy = False
+
+                if not connection_healthy:
+                    sleep_time = next(backoff_time)
+                    logger.warning(f'Connection unhealthy, retrying in {sleep_time}s...')
+                    BACKOFF_COUNTER.inc()
+                    time.sleep(sleep_time)
 
     def _get_next_batch(self):
         batch = []
@@ -100,19 +116,6 @@ class Sender:
             REDIS_PUBLISH_MESSAGE_COUNT.inc(len(batch))
 
         return batch
-
-    @backoff.on_exception(
-            backoff.expo, 
-            exception=(ConnectionError, TimeoutError), 
-            max_tries=7,
-            on_backoff=_on_backoff,
-            logger=None,
-            factor=0.1, 
-            max_value=5,
-    )
-    def _publish_with_backoff(self, publish: callable, stream_entries: List[Tuple[str, bytes]]):
-        with REDIS_PUBLISH_DURATION.time():
-            publish(stream_entries)
 
     def __exit__(self, _, __, ___):
         self._stop_event.set()
