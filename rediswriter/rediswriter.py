@@ -27,9 +27,10 @@ class RedisWriter:
     def get(self, input_proto):
         sae_msg = self._unpack_proto(input_proto)
 
-        sanitized_msg = self._remove_frame_data(sae_msg)
+        if self.config.remove_frame_data == True:
+            sae_msg = self._remove_frame_data(sae_msg)
 
-        return self._pack_proto(sanitized_msg)
+        return self._pack_proto(sae_msg)
     
     def _remove_frame_data(self, sae_msg: SaeMessage) -> SaeMessage:
         # Use a whitelist approach, to make 100% sure that no frame_data is leaked

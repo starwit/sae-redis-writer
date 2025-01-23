@@ -1,4 +1,5 @@
 log_level: DEBUG
+remove_frame_data: true
 redis:
   host: redis
   port: 6379
