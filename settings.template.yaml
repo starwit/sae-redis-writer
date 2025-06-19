@@ -13,3 +13,5 @@ target_redis:
   tls: false                          # Whether to use mutual TLS for communication. See README for details on how to configure.
 stream_ids: 
   - stream1
+
+prometheus_port: 8000

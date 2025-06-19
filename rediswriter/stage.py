@@ -11,8 +11,6 @@ from .sender import Sender
 
 logger = logging.getLogger(__name__)
 
-PROMETHEUS_METRICS_PORT = 8000
-
 FRAME_COUNTER = Counter('redis_writer_frame_counter', 'How many frames have been consumed from the Redis input stream')
 
 def run_stage():
@@ -33,9 +31,9 @@ def run_stage():
 
     logger.setLevel(CONFIG.log_level.value)
 
-    logger.info(f'Starting prometheus metrics endpoint on port {PROMETHEUS_METRICS_PORT}')
+    logger.info(f'Starting prometheus metrics endpoint on port {CONFIG.prometheus_port}')
 
-    start_http_server(PROMETHEUS_METRICS_PORT)
+    start_http_server(CONFIG.prometheus_port)
 
     logger.info(f'Starting redis writer stage. Config: {CONFIG.model_dump_json(indent=2)}')
 
