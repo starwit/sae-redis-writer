@@ -1,8 +1,16 @@
-# SAE-redis-writer
-The intention of this stage is to write received SAE messages to a different redis instance.
+# SAE Redis Writer
+
+This component is part of the Starwit Awareness Engine (SAE). See umbrella repo here: https://github.com/starwit/vision-pipeline-k8s
+
+The intention of this stage is to write received SAE messages to a different redis/[valkey](https://valkey.io/) instance. This means data created by SAE can be transfered to a backend 
+
 The following features are planned:
 - Aggregate all messages into a single output stream, therefore leaving it to the receiver to filter (this should be feasible, because messages without frame data are magnitudes smaller, see below)
 - Remove all frame data for privacy and volume reasons
+
+## How to Build
+
+See [dev readme](doc/DEV_README.md) for build instructions.
 
 ## TLS
 If TLS is enabled in the settings the Redis client will perform mutual TLS with the Redis server. \
