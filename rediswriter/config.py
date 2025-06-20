@@ -25,6 +25,7 @@ class RedisWriterConfig(BaseSettings):
     target_redis: TargetRedisConfig
     stream_ids: List[str] = ['stream1']
     remove_frame_data: bool = True
+    prometheus_port: Annotated[int, Field(gt=1024, le=65536)] = 8000
 
     model_config = SettingsConfigDict(env_nested_delimiter='__')
 

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+mkdir -p /etc/starwit/rediswriter
+mkdir -p /opt/starwit/rediswriter

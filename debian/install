@@ -1,0 +1,4 @@
+settings.yaml /etc/starwit/rediswriter
+main.py /opt/starwit/rediswriter
+
+debian/rediswriter.service /usr/lib/systemd/system/
