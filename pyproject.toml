@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rediswriter"
-version = "1.3.0"
+version = "1.4.0"
 package-mode = false
 description = ""
 authors = ["flonix8 <flstanek@googlemail.com>"]
