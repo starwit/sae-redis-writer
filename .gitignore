@@ -7,5 +7,10 @@ cache
 .vscode
 *.yaml
 !settings.template.yaml
+!.github/workflows/*.yaml
 certs/
+target
+dist
+debian/rediswriter*
 .env
+env.sh
