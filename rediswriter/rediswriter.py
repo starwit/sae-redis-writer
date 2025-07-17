@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from prometheus_client import Histogram, Summary
-from visionapi.sae_pb2 import SaeMessage, VideoFrame
+from visionapi.sae_pb2 import SaeMessage
 
 from .config import RedisWriterConfig
 
