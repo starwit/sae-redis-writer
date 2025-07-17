@@ -2,11 +2,12 @@
 
 This component is part of the Starwit Awareness Engine (SAE). See umbrella repo here: https://github.com/starwit/vision-pipeline-k8s
 
-The intention of this stage is to write received SAE messages to a different redis/[valkey](https://valkey.io/) instance. This means data created by SAE can be transfered to a backend 
+The intention of this stage is to write received messages to a different redis/[valkey](https://valkey.io/) instance. This means data created by SAE can be transfered to a backend.
+It transparently forwards all messages it receives, regardless of their type, to the configured Redis instance.
+If the configuration option `remove_frame_data` is set and the message sucessfully parses as a `SaeMessage`, all image data will be removed from the frame before forwarding the message.
 
 The following features are planned:
 - Aggregate all messages into a single output stream, therefore leaving it to the receiver to filter (this should be feasible, because messages without frame data are magnitudes smaller, see below)
-- Remove all frame data for privacy and volume reasons
 
 ## How to Build
 
@@ -33,3 +34,7 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/run/user/$(id -u)/docker.sock
 ```
 
 If you want to run the tests through VSCode you have to run the action `Python: Configure Tests` and select `pytest`. The Variables above can be supplied by putting an `.env` file into the project root directory.
+
+## Changelog
+### 1.5.0
+- Now transparently forwards all messages verbatim, except if `SaeMessage` is detected for a given stream. No configuration change necessary for existing installations.
