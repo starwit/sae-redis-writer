@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/starwit/rediswriter
-ExecStart=/usr/bin/python3 main.py
+ExecStart=/usr/local/bin/rediswriter
 Restart=always
 RestartSec=5
 
