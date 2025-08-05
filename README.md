@@ -1,6 +1,6 @@
 # SAE Redis Writer
 
-This component is part of the Starwit Awareness Engine (SAE). See umbrella repo here: https://github.com/starwit/vision-pipeline-k8s
+This component is part of the Starwit Awareness Engine (SAE). See umbrella repo here: https://github.com/starwit/starwit-awareness-engine
 
 The intention of this stage is to write received messages to a different redis/[valkey](https://valkey.io/) instance. This means data created by SAE can be transfered to a backend.
 It transparently forwards all messages it receives, regardless of their type, to the configured Redis instance.

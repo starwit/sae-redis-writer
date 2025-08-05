@@ -46,9 +46,11 @@ def run_stage():
     logger.info(f'Starting redis writer stage. Config: {CONFIG.model_dump_json(indent=2)}')
 
     redis_writer = RedisWriter(CONFIG)
-
-    consumer = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, 
-                            stream_keys=[f'{CONFIG.redis.input_stream_prefix}:{id}' for id in CONFIG.stream_ids])
+    
+    stream_mapping = map_config(CONFIG.mapping_config)
+    
+    consumer = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, stream_mapping.keys())
+    logger.debug(f"Listening to stream keys {stream_mapping.keys()}")
     
     sender = Sender(CONFIG)
 
@@ -62,9 +64,10 @@ def run_stage():
             if stream_key is None:
                 continue
 
-            stream_id = stream_key.split(':')[1]
+            stream_id = stream_key.split(':')[1]            
 
             FRAME_COUNTER.inc()
+            logger.debug(f'Received message on stream {stream_id}')
 
             # Detect stream type by analyzing first message
             if not stream_id in message_type_by_stream:
@@ -86,4 +89,17 @@ def run_stage():
             if output_proto_data is None:
                 continue
 
-            send(f'{CONFIG.target_redis.output_stream_prefix}:{stream_id}', output_proto_data)
+            target_stream = stream_mapping.get(stream_key)
+            send(target_stream, output_proto_data)
+
+            
+def map_config(mapping_config):
+    stream_mapping = {}
+    for mapping in mapping_config:
+        if mapping.source == None:
+            continue
+        if mapping.target == None:
+            stream_mapping[mapping.source] = mapping.source
+        else:            
+            stream_mapping[mapping.source] = mapping.target
+    return stream_mapping
