@@ -18,6 +18,9 @@ RUN apt update && apt install --no-install-recommends -y \
     libgl1 \
     libturbojpeg0
 
+# Create a non-root user and group
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
 COPY --from=build --chown=appuser:appgroup /code /code
 WORKDIR /code
 
