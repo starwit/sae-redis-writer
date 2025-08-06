@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Dict
 
 from prometheus_client import Counter, start_http_server
+from visionapi.common_pb2 import TypeMessage, MessageType
 from visionapi.sae_pb2 import SaeMessage
 from visionlib.pipeline.consumer import RedisConsumer
 from visionlib.pipeline.formats import is_sae_message
@@ -16,10 +17,6 @@ from .sender import Sender
 logger = logging.getLogger(__name__)
 
 FRAME_COUNTER = Counter('redis_writer_frame_counter', 'How many frames have been consumed from the Redis input stream')
-
-class MessageType(Enum):
-    SAE = 1
-    OTHER = 2
 
 def run_stage():
 
@@ -46,9 +43,11 @@ def run_stage():
     logger.info(f'Starting redis writer stage. Config: {CONFIG.model_dump_json(indent=2)}')
 
     redis_writer = RedisWriter(CONFIG)
-
-    consumer = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, 
-                            stream_keys=[f'{CONFIG.redis.input_stream_prefix}:{id}' for id in CONFIG.stream_ids])
+    
+    stream_mapping = map_config(CONFIG.mapping_config)
+    
+    consumer = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, stream_mapping.keys())
+    logger.debug(f"Listening to stream keys {stream_mapping.keys()}")
     
     sender = Sender(CONFIG)
 
@@ -62,20 +61,23 @@ def run_stage():
             if stream_key is None:
                 continue
 
-            stream_id = stream_key.split(':')[1]
+            stream_id = stream_key.split(':')[1]            
 
             FRAME_COUNTER.inc()
+            logger.debug(f'Received message on stream {stream_id}')
 
             # Detect stream type by analyzing first message
-            if not stream_id in message_type_by_stream:
-                msg = SaeMessage()
+            if not stream_id in message_type_by_stream:                
+                msg = TypeMessage()
                 msg.ParseFromString(proto_data)
-                if is_sae_message(msg):
-                    msg_type = MessageType.SAE
+                if msg.type != MessageType.UNSPECIFIED:
+                    message_type_by_stream[stream_id] = msg.type
                 else:
-                    msg_type = MessageType.OTHER
-                message_type_by_stream[stream_id] = msg_type
-                logger.info(f'Detected message type {msg_type.name} on stream {stream_id}')
+                    # if message type can't be determined, messages are NOT forwarded
+                    continue
+                
+                type = MessageType.Name(msg.type)
+                logger.info(f'Detected message type {type} on stream {stream_id}')
 
             # Only process SaeMessage messages, otherwise pass verbatim
             if message_type_by_stream[stream_id] == MessageType.SAE:
@@ -86,4 +88,17 @@ def run_stage():
             if output_proto_data is None:
                 continue
 
-            send(f'{CONFIG.target_redis.output_stream_prefix}:{stream_id}', output_proto_data)
+            target_stream = stream_mapping.get(stream_key)
+            send(target_stream, output_proto_data)
+
+            
+def map_config(mapping_config):
+    stream_mapping = {}
+    for mapping in mapping_config:
+        if mapping.source == None:
+            continue
+        if mapping.target == None:
+            stream_mapping[mapping.source] = mapping.source
+        else:            
+            stream_mapping[mapping.source] = mapping.target
+    return stream_mapping

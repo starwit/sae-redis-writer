@@ -35,7 +35,6 @@ class BufferEntry(NamedTuple):
 class Sender:
     def __init__(self, config: RedisWriterConfig) -> None:
         self._config = config.target_redis
-        self._stream_ids = config.stream_ids
         logger.setLevel(config.log_level.value)
 
         self._buffer: Deque[BufferEntry] = deque(maxlen=self._config.buffer_length)
