@@ -70,7 +70,11 @@ def run_stage():
             if not stream_id in message_type_by_stream:                
                 msg = TypeMessage()
                 msg.ParseFromString(proto_data)
-                message_type_by_stream[stream_id] = msg.type
+                if msg.type != MessageType.UNSPECIFIED:
+                    message_type_by_stream[stream_id] = msg.type
+                else:
+                    # if message type can't be determined, messages are NOT forwarded
+                    continue
                 
                 type = MessageType.Name(msg.type)
                 logger.info(f'Detected message type {type} on stream {stream_id}')
