@@ -8,7 +8,7 @@ import uuid
 import pytest
 import redis
 from testcontainers.core.container import DockerContainer
-from visionapi.messages_pb2 import Detection, SaeMessage
+from visionapi.sae_pb2 import Detection, SaeMessage
 
 
 @pytest.fixture(scope="module")
