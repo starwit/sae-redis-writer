@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Dict
 
 from prometheus_client import Counter, start_http_server
+from visionapi.common_pb2 import TypeMessage, MessageType
 from visionapi.sae_pb2 import SaeMessage
 from visionlib.pipeline.consumer import RedisConsumer
 from visionlib.pipeline.formats import is_sae_message
@@ -16,10 +17,6 @@ from .sender import Sender
 logger = logging.getLogger(__name__)
 
 FRAME_COUNTER = Counter('redis_writer_frame_counter', 'How many frames have been consumed from the Redis input stream')
-
-class MessageType(Enum):
-    SAE = 1
-    OTHER = 2
 
 def run_stage():
 
@@ -70,15 +67,13 @@ def run_stage():
             logger.debug(f'Received message on stream {stream_id}')
 
             # Detect stream type by analyzing first message
-            if not stream_id in message_type_by_stream:
-                msg = SaeMessage()
+            if not stream_id in message_type_by_stream:                
+                msg = TypeMessage()
                 msg.ParseFromString(proto_data)
-                if is_sae_message(msg):
-                    msg_type = MessageType.SAE
-                else:
-                    msg_type = MessageType.OTHER
-                message_type_by_stream[stream_id] = msg_type
-                logger.info(f'Detected message type {msg_type.name} on stream {stream_id}')
+                message_type_by_stream[stream_id] = msg.type
+                
+                type = MessageType.Name(msg.type)
+                logger.info(f'Detected message type {type} on stream {stream_id}')
 
             # Only process SaeMessage messages, otherwise pass verbatim
             if message_type_by_stream[stream_id] == MessageType.SAE:
