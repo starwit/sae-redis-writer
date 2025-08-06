@@ -11,12 +11,10 @@ target_redis:
   tls: false                          # Whether to use mutual TLS for communication. See README for details on how to configure.
 
 # this configures mapping between source and target streams 
-# if no target is configured, source stream will fordwarded using source stream name
+# if no target name is configured, source stream will be forwarded to target stream of the same name
 mapping_config:
   - source: geomapper:device01
-    target: geomapper:device01
   - source: positionsource:self
-    target: geomapper:device01
-  - source: aggregator:device01
+    target: positionsource:other
 
 prometheus_port: 8000
