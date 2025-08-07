@@ -13,7 +13,6 @@ jobs:
         image: starwitorg/base-python-image:0.0.15
         volumes:
             - /home/githubrunner/.cache/pypoetry:/root/.cache/pypoetry
-            - /run/user/1000/docker.sock:/var/run/docker.sock
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
