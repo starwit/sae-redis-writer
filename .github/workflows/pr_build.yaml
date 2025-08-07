@@ -31,6 +31,8 @@ jobs:
       - name: Install project
         run: |
           poetry config cache-dir /root/.cache/pypoetry
+          export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+          export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/run/user/$(id -u)/docker.sock
           bash -c "make test"
 
   apt-build:
