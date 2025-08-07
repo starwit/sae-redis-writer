@@ -8,6 +8,9 @@ install:
 check-settings:
 	./check_settings.sh
 
+test: install
+	poetry run pytest
+
 set-version:
 	$(eval VERSION := $(shell poetry version -s))
 	@echo $(VERSION)
@@ -29,9 +32,6 @@ build-deb: check-settings set-version
 
 	mkdir -p target
 	mv ../${PACKAGE_NAME}_* target/
-
-test:
-	@echo "Unit tests not implemented yet"	
 
 clean:
 	rm -rf dist
