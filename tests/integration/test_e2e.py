@@ -8,6 +8,7 @@ import uuid
 import pytest
 import redis
 from testcontainers.core.container import DockerContainer
+from visionapi.common_pb2 import MessageType
 from visionapi.sae_pb2 import Detection, SaeMessage
 
 
@@ -50,13 +51,11 @@ def writer_stage(redis_container, target_redis_container):
     CONFIG_ENV = {
         "REDIS__HOST": str(redis_container.get_container_host_ip()),
         "REDIS__PORT": str(redis_container.get_exposed_port(6379)),
-        "REDIS__INPUT_STREAM_PREFIX": "input",
         "TARGET_REDIS__HOST": str(target_redis_container.get_container_host_ip()),
         "TARGET_REDIS__PORT": str(target_redis_container.get_exposed_port(6379)),
-        "TARGET_REDIS__OUTPUT_STREAM_PREFIX": "output",
         "TARGET_REDIS__BUFFER_LENGTH": "1000",
         "TARGET_REDIS__TARGET_STREAM_MAXLEN": "10000",
-        "STREAM_IDS": "[\"stream\"]",
+        "MAPPING_CONFIG": "[{\"source\": \"input:stream\", \"target\": \"output:stream\"}]",
     }
     proc = subprocess.Popen([sys.executable, "main.py"], stdout=sys.stdout, stderr=sys.stderr, env=CONFIG_ENV)
     yield
@@ -82,6 +81,7 @@ def create_sae_msg(ts: int):
     sae_msg.frame.shape.height = 1080
     sae_msg.frame.shape.channels = 3
     sae_msg.frame.frame_data = b"1234567890"
+    sae_msg.type = MessageType.SAE
 
     for _ in range(random.randint(2, 20)):
         sae_msg.detections.append(create_sae_det())
