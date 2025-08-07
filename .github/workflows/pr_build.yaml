@@ -34,6 +34,7 @@ jobs:
           poetry config cache-dir /root/.cache/pypoetry
           export DOCKER_HOST=unix:///var/run/docker_rootless.sock
           export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker_rootless.sock
+          export TESTCONTAINERS_RYUK_DISABLED=true
           bash -c "make test"
 
   apt-build:
