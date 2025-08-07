@@ -20,10 +20,6 @@ prometheus-client = "^0.17.1"
 pytest = "^8.2.1"
 testcontainers = "^4.4.1"
 
-[tool.pytest.ini_options]
-addopts = [
-    "--ignore=tests/integration",
-]
 
 [build-system]
 requires = ["poetry-core"]
