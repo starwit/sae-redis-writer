@@ -37,6 +37,7 @@ class RedisWriter:
         source_id = sae_msg.frame.source_id
         timestamp_utc_ms = sae_msg.frame.timestamp_utc_ms
         shape = sae_msg.frame.shape
+        camera_location = sae_msg.frame.camera_location
 
         sae_msg.ClearField('frame')
 
@@ -44,6 +45,7 @@ class RedisWriter:
         sae_msg.frame.source_id = source_id
         sae_msg.frame.timestamp_utc_ms = timestamp_utc_ms
         sae_msg.frame.shape.CopyFrom(shape)
+        sae_msg.frame.camera_location.CopyFrom(camera_location)
 
         return sae_msg
         
