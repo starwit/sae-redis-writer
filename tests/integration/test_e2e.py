@@ -1,4 +1,5 @@
 import base64
+import os
 import random
 import subprocess
 import sys
@@ -93,6 +94,7 @@ def assert_redis_msg(ts: int, redis_msg):
     output_msg.ParseFromString(base64.b64decode(redis_msg[1][b"proto_data_b64"]))
     assert output_msg.frame.timestamp_utc_ms == ts
 
+@pytest.mark.integration
 def test_single_message_send(writer_stage, redis_client, target_redis_client):
     '''Create a SaeMessage and feed it into the redis writer'''
     sae_msg_bytes = create_sae_msg(1)
@@ -106,6 +108,7 @@ def test_single_message_send(writer_stage, redis_client, target_redis_client):
     assert len(messages) == 1
     assert_redis_msg(1, messages[0])  
 
+@pytest.mark.integration
 def test_many_messages_send(writer_stage, redis_client, target_redis_client):
     '''Create many SaeMessages and feed them into the redis writer'''
     MSG_COUNT = 1000
