@@ -1,22 +1,28 @@
 from rediswriter.sender import Sender
-from rediswriter.config import RedisWriterConfig, TargetRedisConfig, LogLevel
+from rediswriter.config import RedisWriterConfig, TargetRedisConfig, MappingConfig
 from unittest.mock import patch, MagicMock
 from redis.exceptions import ConnectionError
 import time
+import pytest
 
-@patch('rediswriter.sender.RedisPipelinePublisher')
-def test_simple_publish(redis_publisher_mock):
-    publish_mock = MagicMock()
-    redis_publisher_mock.return_value.__enter__.return_value = publish_mock
-    
-    testee = Sender(RedisWriterConfig(
+@pytest.fixture
+def config():
+    return RedisWriterConfig(
         target_redis=TargetRedisConfig(
             host="localhost", 
             port=6379, 
             buffer_length=10, 
             target_stream_maxlen=1000
-        )
-    ))
+        ),
+        mapping_config=[MappingConfig()]
+    )
+
+@patch('rediswriter.sender.RedisPipelinePublisher')
+def test_simple_publish(redis_publisher_mock, config):
+    publish_mock = MagicMock()
+    redis_publisher_mock.return_value.__enter__.return_value = publish_mock
+    
+    testee = Sender(config)
 
     with testee as publish:
         publish('key', b'msg_bytes')
@@ -32,7 +38,7 @@ def test_simple_publish(redis_publisher_mock):
     assert len(publish_mock.call_args_list[1].args[0]) == 1    
 
 @patch('rediswriter.sender.RedisPipelinePublisher')
-def test_error_publish(redis_publisher_mock):
+def test_error_publish(redis_publisher_mock, config):
     publish_mock = MagicMock()
     redis_publisher_mock.return_value.__enter__.return_value = publish_mock
 
@@ -47,14 +53,7 @@ def test_error_publish(redis_publisher_mock):
         None,
     ]
     
-    testee = Sender(RedisWriterConfig(
-        target_redis=TargetRedisConfig(
-            host="localhost", 
-            port=6379, 
-            buffer_length=10, 
-            target_stream_maxlen=1000
-        )
-    ))
+    testee = Sender(config)
 
     with testee as publish:
         publish('key1', b'')
