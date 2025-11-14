@@ -76,10 +76,9 @@ class Sender:
             while not self._stop_event.is_set():
                 if connection_healthy:
                     batch = self._get_next_batch()
-                    
-                if len(batch) == 0:
-                    time.sleep(0.05)
-                    continue
+                    if len(batch) == 0:
+                        time.sleep(0.05)
+                        continue
 
                 try:
                     with REDIS_PUBLISH_DURATION.time():
@@ -91,6 +90,9 @@ class Sender:
                         
                 except (ConnectionError, TimeoutError) as e:
                     connection_healthy = False
+                except Exception as e:
+                    connection_healthy = False
+                    logger.warning('Got unexpected exception', exc_info=True)
 
                 if not connection_healthy:
                     sleep_time = next(backoff_time)
