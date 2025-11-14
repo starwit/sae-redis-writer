@@ -37,7 +37,7 @@ def test_simple_publish(redis_publisher_mock, config):
         publish('key', b'msg_bytes')
         time.sleep(0.1)
 
-    # Verify that two batches were send of length 3 and 1
+    # Verify that two batches were sent of length 3 and 1
     assert publish_mock.call_count == 2
     assert len(publish_mock.call_args_list[0].args[0]) == 3
     assert len(publish_mock.call_args_list[1].args[0]) == 1    
