@@ -26,7 +26,9 @@ For the setup to work correctly, the following files need be in place:
 | `./certs/ca.crt`     | Certificate Authority that was used to sign the server cert |
 
 ## Tests
-Run tests by executing `poetry run pytest`. The integration tests require Docker to be available.\
+Run tests by executing `poetry run pytest`.\
+Run integration tests by executing `poetry run pytest -m integration`.\
+The integration tests require Docker to be available.\
 If you use Docker Rootless, you have to set the following variables for testcontainers to use the correct Docker socket:
 ```bash
 export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock

@@ -21,8 +21,11 @@ pytest = "^8.2.1"
 testcontainers = "^4.4.1"
 
 [tool.pytest.ini_options]
+markers = [
+    "integration"
+]
 addopts = [
-    "--ignore=tests/integration",
+    "-m not integration",
 ]
 
 [build-system]
