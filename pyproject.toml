@@ -9,16 +9,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pydantic = "^2.0.0"
+pydantic = "^2.12.4"
 visionapi = { git = "https://github.com/starwit/vision-api.git", subdirectory = "python/visionapi", tag = "3.4.0" }
 visionlib = { git = "https://github.com/starwit/vision-lib.git", subdirectory = "python", tag = "0.12.0" }
-redis = "^5.0.0"
-pydantic-settings = "^2.0.3"
-prometheus-client = "^0.17.1"
+redis = "^5.3.1"
+pydantic-settings = "^2.12.0"
+prometheus-client = "^0.23.1"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.2.1"
-testcontainers = "^4.4.1"
+pytest = "^9.0.1"
+testcontainers = "^4.13.3"
 
 [tool.pytest.ini_options]
 markers = [
