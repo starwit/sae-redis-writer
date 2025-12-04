@@ -42,13 +42,19 @@ class Sender:
         self._stop_event = Event()
         self._sender_thread = Thread(target=self._run)
 
-        self._redis_args = {
-            'ssl': True,
-            'ssl_certfile': 'certs/client.crt',
-            'ssl_keyfile': 'certs/client.key',
-            'ssl_cert_reqs': 'required',
-            'ssl_ca_certs': 'certs/ca.crt',
-        } if self._config.tls else {}
+        self._redis_args = {}
+        if self._config.tls:
+            self._redis_args.update({
+                'ssl': True,
+                'ssl_certfile': 'certs/client.crt',
+                'ssl_keyfile': 'certs/client.key',
+                'ssl_cert_reqs': 'required',
+                'ssl_ca_certs': 'certs/ca.crt',
+            })
+        if self._config.socket_timeout_s:
+            self._redis_args.update({
+                'socket_timeout': self._config.socket_timeout_s,
+            })
         
     def _publish(self, stream_key, msg_bytes):
         if len(self._buffer) == self._buffer.maxlen:
