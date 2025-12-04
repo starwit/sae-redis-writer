@@ -62,7 +62,6 @@ def run_stage():
             stream_id = stream_key.split(':')[1]            
 
             FRAME_COUNTER.inc()
-            logger.debug(f'Received message on stream {stream_id}')
 
             # Detect stream type by analyzing first message
             if not stream_id in message_type_by_stream:                

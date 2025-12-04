@@ -94,9 +94,10 @@ class Sender:
                         backoff_time = backoff_gen()
                         logger.info(f'Connection to {self._config.host}:{self._config.port} healthy. Resuming.')
                         
-                except (ConnectionError, TimeoutError) as e:
+                except (ConnectionError, TimeoutError) as _:
                     connection_healthy = False
-                except Exception as e:
+                    logger.debug('Publish failed with error', exc_info=True)
+                except Exception as _:
                     connection_healthy = False
                     logger.warning('Got unexpected exception', exc_info=True)
 
