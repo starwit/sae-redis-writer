@@ -1,9 +1,9 @@
 import time
 from collections import Counter
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from redis.exceptions import ConnectionError
+from valkey.exceptions import ConnectionError
 
 from rediswriter.config import (MappingConfig, RedisWriterConfig,
                                 TargetRedisConfig)
@@ -22,11 +22,12 @@ def config():
         mapping_config=[MappingConfig()]
     )
 
-@patch('rediswriter.sender.RedisPipelinePublisher')
-def test_simple_publish(redis_publisher_mock, config):
-    publish_mock = MagicMock()
-    redis_publisher_mock.return_value.__enter__.return_value = publish_mock
-    
+@pytest.fixture
+def publisher_mock():
+    with patch('rediswriter.sender.ValkeyPipelinePublisher') as mock_publisher:
+        yield mock_publisher.return_value.__enter__.return_value
+
+def test_simple_publish(publisher_mock, config):
     testee = Sender(config)
 
     with testee as publish:
@@ -38,16 +39,12 @@ def test_simple_publish(redis_publisher_mock, config):
         time.sleep(0.1)
 
     # Verify that two batches were sent of length 3 and 1
-    assert publish_mock.call_count == 2
-    assert len(publish_mock.call_args_list[0].args[0]) == 3
-    assert len(publish_mock.call_args_list[1].args[0]) == 1    
+    assert publisher_mock.call_count == 2
+    assert len(publisher_mock.call_args_list[0].args[0]) == 3
+    assert len(publisher_mock.call_args_list[1].args[0]) == 1    
 
-@patch('rediswriter.sender.RedisPipelinePublisher')
-def test_error_publish(redis_publisher_mock, config):
-    publish_mock = MagicMock()
-    redis_publisher_mock.return_value.__enter__.return_value = publish_mock
-
-    publish_mock.side_effect = [
+def test_error_publish(publisher_mock, config):
+    publisher_mock.side_effect = [
         None,
         ConnectionError(),
         None,
@@ -62,17 +59,13 @@ def test_error_publish(redis_publisher_mock, config):
         time.sleep(0.1)
 
     # Verify that all messages were sent (and key2 was retried)
-    assert publish_mock.call_count == 3
-    assert publish_mock.call_args_list[0].args[0][0].stream_key == 'key1'
-    assert publish_mock.call_args_list[1].args[0][0].stream_key == 'key2'
-    assert publish_mock.call_args_list[2].args[0][0].stream_key == 'key2'
+    assert publisher_mock.call_count == 3
+    assert publisher_mock.call_args_list[0].args[0][0].stream_key == 'key1'
+    assert publisher_mock.call_args_list[1].args[0][0].stream_key == 'key2'
+    assert publisher_mock.call_args_list[2].args[0][0].stream_key == 'key2'
 
-@patch('rediswriter.sender.RedisPipelinePublisher')
-def test_error_backoff_reset(redis_publisher_mock, config):
-    publish_mock = MagicMock()
-    redis_publisher_mock.return_value.__enter__.return_value = publish_mock
-
-    publish_mock.side_effect = [
+def test_error_backoff_reset(publisher_mock, config):
+    publisher_mock.side_effect = [
         None,
         ConnectionError(),
         ConnectionError(),
@@ -95,21 +88,17 @@ def test_error_backoff_reset(redis_publisher_mock, config):
 
 
     # Verify that all messages were sent. If backoff was not reset, the sleep time would not be enough to make all calls.
-    assert publish_mock.call_count == 8
+    assert publisher_mock.call_count == 8
 
-    send_counts = Counter(map(lambda c: c.args[0][0].stream_key, publish_mock.call_args_list))
+    send_counts = Counter(map(lambda c: c.args[0][0].stream_key, publisher_mock.call_args_list))
     assert send_counts['key1'] == 1
     assert send_counts['key2'] == 5
     assert send_counts['key3'] == 2
 
 
-@patch('rediswriter.sender.RedisPipelinePublisher')
-def test_bug_all_dropped_1904(redis_publisher_mock, config):
-    publish_mock = MagicMock()
-    redis_publisher_mock.return_value.__enter__.return_value = publish_mock
-
+def test_bug_all_dropped_1904(publisher_mock, config):
     # We can't know because we don't have any logs, but the theory is that an unexpected exception crashed the sender thread
-    publish_mock.side_effect = [
+    publisher_mock.side_effect = [
         Exception(),
         None,
     ]
@@ -122,5 +111,5 @@ def test_bug_all_dropped_1904(redis_publisher_mock, config):
         time.sleep(0.2)
 
     # Verify that 'key1' message has been sent after the unexpected exception
-    assert len(publish_mock.mock_calls) == 2
-    assert publish_mock.call_args_list[1].args[0][0].stream_key == 'key1'
+    assert len(publisher_mock.mock_calls) == 2
+    assert publisher_mock.call_args_list[1].args[0][0].stream_key == 'key1'

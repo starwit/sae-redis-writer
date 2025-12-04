@@ -29,10 +29,9 @@ For the setup to work correctly, the following files need be in place:
 Run tests by executing `poetry run pytest`.\
 Run integration tests by executing `poetry run pytest -m integration`.\
 The integration tests require Docker to be available.\
-If you use Docker Rootless, you have to set the following variables for testcontainers to use the correct Docker socket:
+If you use Docker Rootless, you have to set the following variable for testcontainers to use the correct Docker socket:
 ```bash
 export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
-export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/run/user/$(id -u)/docker.sock
 ```
 
 If you want to run the tests through VSCode you have to run the action `Python: Configure Tests` and select `pytest`. The Variables above can be supplied by putting an `.env` file into the project root directory.
