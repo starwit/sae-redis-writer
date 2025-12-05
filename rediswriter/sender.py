@@ -2,11 +2,11 @@ import logging
 import time
 from collections import deque
 from threading import Event, Thread
-from typing import Deque, List, NamedTuple, Tuple
+from typing import Deque, NamedTuple
 
 from prometheus_client import Counter, Histogram, Summary
-from redis.exceptions import ConnectionError, TimeoutError
-from visionlib.pipeline.publisher import RedisPipelinePublisher
+from valkey.exceptions import ConnectionError, TimeoutError
+from visionlib.pipeline import ValkeyPipelinePublisher
 
 from .config import RedisWriterConfig
 
@@ -42,13 +42,19 @@ class Sender:
         self._stop_event = Event()
         self._sender_thread = Thread(target=self._run)
 
-        self._redis_args = {
-            'ssl': True,
-            'ssl_certfile': 'certs/client.crt',
-            'ssl_keyfile': 'certs/client.key',
-            'ssl_cert_reqs': 'required',
-            'ssl_ca_certs': 'certs/ca.crt',
-        } if self._config.tls else {}
+        self._redis_args = {}
+        if self._config.tls:
+            self._redis_args.update({
+                'ssl': True,
+                'ssl_certfile': 'certs/client.crt',
+                'ssl_keyfile': 'certs/client.key',
+                'ssl_cert_reqs': 'required',
+                'ssl_ca_certs': 'certs/ca.crt',
+            })
+        if self._config.socket_timeout_s:
+            self._redis_args.update({
+                'socket_timeout': self._config.socket_timeout_s,
+            })
         
     def _publish(self, stream_key, msg_bytes):
         if len(self._buffer) == self._buffer.maxlen:
@@ -61,7 +67,7 @@ class Sender:
         return self._publish
     
     def _run(self):
-        publisher = RedisPipelinePublisher(
+        publisher = ValkeyPipelinePublisher(
             host=self._config.host,
             port=self._config.port,
             stream_maxlen=self._config.target_stream_maxlen,
@@ -88,9 +94,10 @@ class Sender:
                         backoff_time = backoff_gen()
                         logger.info(f'Connection to {self._config.host}:{self._config.port} healthy. Resuming.')
                         
-                except (ConnectionError, TimeoutError) as e:
+                except (ConnectionError, TimeoutError) as _:
                     connection_healthy = False
-                except Exception as e:
+                    logger.debug('Publish failed with error', exc_info=True)
+                except Exception as _:
                     connection_healthy = False
                     logger.warning('Got unexpected exception', exc_info=True)
 

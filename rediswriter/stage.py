@@ -6,9 +6,7 @@ from typing import Dict
 
 from prometheus_client import Counter, start_http_server
 from visionapi.common_pb2 import TypeMessage, MessageType
-from visionapi.sae_pb2 import SaeMessage
-from visionlib.pipeline.consumer import RedisConsumer
-from visionlib.pipeline.formats import is_sae_message
+from visionlib.pipeline import ValkeyConsumer
 
 from .config import RedisWriterConfig
 from .rediswriter import RedisWriter
@@ -46,15 +44,15 @@ def run_stage():
     
     stream_mapping = map_config(CONFIG.mapping_config)
     
-    consumer = RedisConsumer(CONFIG.redis.host, CONFIG.redis.port, stream_mapping.keys())
+    consumer_ctx = ValkeyConsumer(CONFIG.redis.host, CONFIG.redis.port, stream_mapping.keys())
     logger.debug(f"Listening to stream keys {stream_mapping.keys()}")
     
     sender = Sender(CONFIG)
 
     message_type_by_stream: Dict[str, MessageType] = {}
     
-    with consumer as consume, sender as send:
-        for stream_key, proto_data in consume():
+    with consumer_ctx as iter_messages, sender as send:
+        for stream_key, proto_data in iter_messages():
             if stop_event.is_set():
                 break
 
@@ -64,7 +62,6 @@ def run_stage():
             stream_id = stream_key.split(':')[1]            
 
             FRAME_COUNTER.inc()
-            logger.debug(f'Received message on stream {stream_id}')
 
             # Detect stream type by analyzing first message
             if not stream_id in message_type_by_stream:                

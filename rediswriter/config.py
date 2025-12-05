@@ -16,6 +16,7 @@ class TargetRedisConfig(BaseModel):
     buffer_length: Annotated[int, Field(ge=1)] = 100
     target_stream_maxlen: Annotated[int, Field(ge=1)] = 100
     tls: bool = False
+    socket_timeout_s: Annotated[float, Field(ge=0)] = 5
     
 class MappingConfig(BaseModel):
     source: str = None
