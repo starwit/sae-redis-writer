@@ -59,25 +59,23 @@ def run_stage():
             if stream_key is None:
                 continue
 
-            stream_id = stream_key.split(':')[1]            
-
             FRAME_COUNTER.inc()
 
             # Detect stream type by analyzing first message
-            if not stream_id in message_type_by_stream:                
+            if not stream_key in message_type_by_stream:                
                 msg = TypeMessage()
                 msg.ParseFromString(proto_data)
                 if msg.type != MessageType.UNSPECIFIED:
-                    message_type_by_stream[stream_id] = msg.type
+                    message_type_by_stream[stream_key] = msg.type
                 else:
                     # if message type can't be determined, messages are NOT forwarded
                     continue
                 
                 type = MessageType.Name(msg.type)
-                logger.info(f'Detected message type {type} on stream {stream_id}')
+                logger.info(f'Detected message type {type} on stream {stream_key}')
 
             # Only process SaeMessage messages, otherwise pass verbatim
-            if message_type_by_stream[stream_id] == MessageType.SAE:
+            if message_type_by_stream[stream_key] == MessageType.SAE:
                 output_proto_data = redis_writer.get(proto_data)
             else:
                 output_proto_data = proto_data

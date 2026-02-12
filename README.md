@@ -37,5 +37,8 @@ export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
 If you want to run the tests through VSCode you have to run the action `Python: Configure Tests` and select `pytest`. The Variables above can be supplied by putting an `.env` file into the project root directory.
 
 ## Changelog
+### 2.1.1
+- Fix bug where frame data would not be reliably removed while forwarding multiple streams
+
 ### 1.5.0
 - Now transparently forwards all messages verbatim, except if `SaeMessage` is detected for a given stream. No configuration change necessary for existing installations.
