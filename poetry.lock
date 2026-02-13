@@ -604,25 +604,41 @@ toml = ["tomli (>=2.0.1)"]
 yaml = ["pyyaml (>=6.0.1)"]
 
 [[package]]
-name = "pytest"
-version = "8.2.1"
-description = "pytest: simple powerful testing with Python"
+name = "pygments"
+version = "2.19.2"
+description = "Pygments is a syntax highlighting package written in Python."
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "pytest-8.2.1-py3-none-any.whl", hash = "sha256:faccc5d332b8c3719f40283d0d44aa5cf101cec36f88cde9ed8f2bc0538612b1"},
-    {file = "pytest-8.2.1.tar.gz", hash = "sha256:5046e5b46d8e4cac199c373041f26be56fdb81eb4e67dc11d4e10811fc3408fd"},
+    {file = "pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"},
+    {file = "pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"},
+]
+
+[package.extras]
+windows-terminal = ["colorama (>=0.4.6)"]
+
+[[package]]
+name = "pytest"
+version = "9.0.2"
+description = "pytest: simple powerful testing with Python"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "pytest-9.0.2-py3-none-any.whl", hash = "sha256:711ffd45bf766d5264d487b917733b453d917afd2b0ad65223959f59089f875b"},
+    {file = "pytest-9.0.2.tar.gz", hash = "sha256:75186651a92bd89611d1d9fc20f0b4345fd827c41ccd5c299a868a05d70edf11"},
 ]
 
 [package.dependencies]
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
-iniconfig = "*"
-packaging = "*"
-pluggy = ">=1.5,<2.0"
+colorama = {version = ">=0.4", markers = "sys_platform == \"win32\""}
+iniconfig = ">=1.0.1"
+packaging = ">=22"
+pluggy = ">=1.5,<2"
+pygments = ">=2.7.2"
 
 [package.extras]
-dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "python-dotenv"
@@ -763,14 +779,14 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "testcontainers"
-version = "4.13.3"
+version = "4.14.1"
 description = "Python library for throwaway instances of anything that can run in a Docker container"
 optional = false
-python-versions = ">=3.9.2"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "testcontainers-4.13.3-py3-none-any.whl", hash = "sha256:063278c4805ffa6dd85e56648a9da3036939e6c0ac1001e851c9276b19b05970"},
-    {file = "testcontainers-4.13.3.tar.gz", hash = "sha256:9d82a7052c9a53c58b69e1dc31da8e7a715e8b3ec1c4df5027561b47e2efe646"},
+    {file = "testcontainers-4.14.1-py3-none-any.whl", hash = "sha256:03dfef4797b31c82e7b762a454b6afec61a2a512ad54af47ab41e4fa5415f891"},
+    {file = "testcontainers-4.14.1.tar.gz", hash = "sha256:316f1bb178d829c003acd650233e3ff3c59a833a08d8661c074f58a4fbd42a64"},
 ]
 
 [package.dependencies]
@@ -781,39 +797,39 @@ urllib3 = "*"
 wrapt = "*"
 
 [package.extras]
-arangodb = ["python-arango (>=7.8,<8.0)"]
-aws = ["boto3", "httpx"]
-azurite = ["azure-storage-blob (>=12.19,<13.0)"]
-chroma = ["chromadb-client (>=1.0.0,<2.0.0)"]
-cosmosdb = ["azure-cosmos"]
-db2 = ["ibm_db_sa ; platform_machine != \"aarch64\" and platform_machine != \"arm64\"", "sqlalchemy"]
-generic = ["httpx", "redis"]
-google = ["google-cloud-datastore (>=2)", "google-cloud-pubsub (>=2)"]
-influxdb = ["influxdb", "influxdb-client"]
+arangodb = ["python-arango (>=8,<9)"]
+aws = ["boto3 (>=1,<2)", "httpx"]
+azurite = ["azure-storage-blob (>=12,<13)"]
+chroma = ["chromadb-client (>=1,<2)"]
+cosmosdb = ["azure-cosmos (>=4,<5)"]
+db2 = ["ibm_db_sa ; platform_machine != \"aarch64\" and platform_machine != \"arm64\"", "sqlalchemy (>=2,<3)"]
+generic = ["httpx", "redis (>=7,<8)"]
+google = ["google-cloud-datastore (>=2,<3)", "google-cloud-pubsub (>=2,<3)"]
+influxdb = ["influxdb (>=5,<6)", "influxdb-client (>=1,<2)"]
 k3s = ["kubernetes", "pyyaml (>=6.0.3)"]
-keycloak = ["python-keycloak"]
-localstack = ["boto3"]
+keycloak = ["python-keycloak (>=6,<7) ; python_version < \"4.0\""]
+localstack = ["boto3 (>=1,<2)"]
 mailpit = ["cryptography"]
-minio = ["minio"]
-mongodb = ["pymongo"]
-mssql = ["pymssql (>=2.3.9) ; platform_machine != \"arm64\" or python_version >= \"3.10\"", "sqlalchemy"]
-mysql = ["pymysql[rsa]", "sqlalchemy"]
-nats = ["nats-py"]
-neo4j = ["neo4j"]
-openfga = ["openfga-sdk ; python_version >= \"3.10\""]
-opensearch = ["opensearch-py ; python_version < \"4.0\""]
-oracle = ["oracledb (>=3.4.1)", "sqlalchemy"]
-oracle-free = ["oracledb (>=3.4.1)", "sqlalchemy"]
-qdrant = ["qdrant-client"]
-rabbitmq = ["pika"]
-redis = ["redis"]
-registry = ["bcrypt"]
-scylla = ["cassandra-driver (==3.29.1)"]
-selenium = ["selenium"]
+minio = ["minio (>=7,<8)"]
+mongodb = ["pymongo (>=4,<5)"]
+mssql = ["pymssql (>=2,<3)", "sqlalchemy (>=2,<3)"]
+mysql = ["pymysql[rsa] (>=1,<2)", "sqlalchemy (>=2,<3)"]
+nats = ["nats-py (>=2,<3)"]
+neo4j = ["neo4j (>=6,<7)"]
+openfga = ["openfga-sdk"]
+opensearch = ["opensearch-py (>=3,<4) ; python_version < \"4.0\""]
+oracle = ["oracledb (>=3,<4)", "sqlalchemy (>=2,<3)"]
+oracle-free = ["oracledb (>=3,<4)", "sqlalchemy (>=2,<3)"]
+qdrant = ["qdrant-client (>=1,<2)"]
+rabbitmq = ["pika (>=1,<2)"]
+redis = ["redis (>=7,<8)"]
+registry = ["bcrypt (>=5,<6)"]
+scylla = ["cassandra-driver (>=3,<4)"]
+selenium = ["selenium (>=4,<5)"]
 sftp = ["cryptography"]
 test-module-import = ["httpx"]
 trino = ["trino"]
-weaviate = ["weaviate-client (>=4.5.4,<5.0.0)"]
+weaviate = ["weaviate-client (>=4,<5)"]
 
 [[package]]
 name = "typing-extensions"
@@ -1005,4 +1021,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "e06199faf7c0a490885b6c06c73a95f39138f13372fe8b311f523c4144082a36"
+content-hash = "fdeef066c3cbf065d74a2e54dfa14752e74a556092750d80cf7ee4c31871a8a2"
