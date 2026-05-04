@@ -4,7 +4,7 @@ from collections import deque
 from threading import Event, Thread
 from typing import Deque, NamedTuple
 
-from prometheus_client import Counter, Histogram, Summary
+from prometheus_client import Counter, Histogram
 from valkey.exceptions import ConnectionError, TimeoutError
 from visionlib.pipeline import ValkeyPipelinePublisher
 
@@ -18,7 +18,7 @@ GIVEUP_COUNTER = Counter('redis_writer_giveup_counter', 'How many messages were 
 DISCARD_BUFFER_COUNTER = Counter('redis_writer_discard_buffer_counter', 'How many input messages have to be discarded because sender cannot keep up')
 REDIS_PUBLISH_DURATION = Histogram('redis_writer_target_redis_publish_duration', 'The time it takes to push a message onto the Redis stream',
                                    buckets=(0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25))
-REDIS_PUBLISH_BYTES_SENT = Summary('redis_writer_target_redis_published_bytes_estimate', 'How many bytes were sent to the Redis stream (this is estimated!)')
+REDIS_PUBLISH_BYTES_SENT = Counter('redis_writer_target_redis_published_bytes_estimate', 'How many bytes were sent to the Redis stream (this is estimated!)')
 REDIS_PUBLISH_MESSAGE_COUNT = Counter('redis_writer_target_redis_message_counter', 'How many messages were sent to the Redis stream')
 
 def backoff_gen(max_wait=10):
@@ -120,7 +120,7 @@ class Sender:
             pass
 
         if len(batch) > 0:
-            REDIS_PUBLISH_BYTES_SENT.observe(batch_bytes)
+            REDIS_PUBLISH_BYTES_SENT.inc(batch_bytes)
             REDIS_PUBLISH_MESSAGE_COUNT.inc(len(batch))
 
         return batch
