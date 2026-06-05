@@ -26,7 +26,7 @@ def target_valkey_container():
 @pytest.fixture(scope='module')
 def fail_network(target_valkey_container):
     def _fail_network():
-        target_valkey_container.exec('tc qdisc add dev eth0 root netem loss 100%')
+        target_valkey_container.exec('tc qdisc replace dev eth0 root netem loss 100%')
     return _fail_network
 
 @pytest.fixture(scope='module')
@@ -46,7 +46,7 @@ def valkey_client(valkey_container):
 @pytest.fixture()
 def set_network_delay(target_valkey_container):
     def _set_network_delay(delay_ms: int, jitter_ms: int = 0, correlation_pct: int = 0):
-        target_valkey_container.exec(f'tc qdisc add dev eth0 root netem delay {delay_ms}ms {jitter_ms}ms {correlation_pct}%')
+        target_valkey_container.exec(f'tc qdisc replace dev eth0 root netem delay {delay_ms}ms {jitter_ms}ms {correlation_pct}%')
     return _set_network_delay
 
 @pytest.fixture(autouse=True)

@@ -4,7 +4,7 @@ from collections import deque
 from threading import Event, Thread
 from typing import Deque, NamedTuple
 
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter, Gauge, Histogram
 from valkey.exceptions import ConnectionError, TimeoutError
 from visionlib.pipeline import ValkeyPipelinePublisher
 
@@ -20,6 +20,7 @@ REDIS_PUBLISH_DURATION = Histogram('redis_writer_target_redis_publish_duration',
                                    buckets=(0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25))
 REDIS_PUBLISH_BYTES_SENT = Counter('redis_writer_target_redis_published_bytes_estimate', 'How many bytes were sent to the Redis stream (this is estimated!)')
 REDIS_PUBLISH_MESSAGE_COUNT = Counter('redis_writer_target_redis_message_counter', 'How many messages were sent to the Redis stream')
+BUFFER_SIZE = Gauge('redis_writer_input_buffer_size', 'Number of elements currently in the incoming message buffer')
 
 def backoff_gen(max_wait=10):
     wait_time = 0.05
@@ -61,6 +62,7 @@ class Sender:
             DISCARD_BUFFER_COUNTER.inc()
 
         self._buffer.append(BufferEntry(stream_key, msg_bytes))
+        BUFFER_SIZE.set(len(self._buffer))
 
     def __enter__(self):
         self._sender_thread.start()
@@ -122,6 +124,7 @@ class Sender:
         if len(batch) > 0:
             REDIS_PUBLISH_BYTES_SENT.inc(batch_bytes)
             REDIS_PUBLISH_MESSAGE_COUNT.inc(len(batch))
+            BUFFER_SIZE.set(len(self._buffer))
 
         return batch
 
