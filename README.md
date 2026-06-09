@@ -37,6 +37,9 @@ export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
 If you want to run the tests through VSCode you have to run the action `Python: Configure Tests` and select `pytest`. The Variables above can be supplied by putting an `.env` file into the project root directory.
 
 ## Changelog
+### 2.1.3
+- Add metric `redis_writer_output_buffer_size` to track the number of buffered messages
+
 ### 2.1.2
 - Change metric `redis_writer_target_redis_published_bytes_estimate` from Summary to Counter (to allow tracking of total bytes sent)
 

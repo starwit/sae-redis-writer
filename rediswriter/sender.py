@@ -20,7 +20,7 @@ REDIS_PUBLISH_DURATION = Histogram('redis_writer_target_redis_publish_duration',
                                    buckets=(0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25))
 REDIS_PUBLISH_BYTES_SENT = Counter('redis_writer_target_redis_published_bytes_estimate', 'How many bytes were sent to the Redis stream (this is estimated!)')
 REDIS_PUBLISH_MESSAGE_COUNT = Counter('redis_writer_target_redis_message_counter', 'How many messages were sent to the Redis stream')
-BUFFER_SIZE = Gauge('redis_writer_input_buffer_size', 'Number of elements currently in the incoming message buffer')
+BUFFER_SIZE = Gauge('redis_writer_output_buffer_size', 'Number of elements currently in the outgoing message buffer')
 
 def backoff_gen(max_wait=10):
     wait_time = 0.05
