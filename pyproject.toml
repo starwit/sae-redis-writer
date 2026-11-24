@@ -11,7 +11,7 @@ readme = "README.md"
 python = "^3.12"
 pydantic = "2.12.5"
 visionapi = { git = "https://github.com/starwit/vision-api.git", subdirectory = "python/visionapi", tag = "3.5.3" }
-visionlib = { git = "https://github.com/starwit/vision-lib.git", subdirectory = "python", tag = "1.0.0" }
+visionlib = { git = "https://github.com/starwit/vision-lib.git", subdirectory = "python", tag = "1.4.0" }
 valkey = "6.1.1"
 pydantic-settings = "2.12.0"
 prometheus-client = "0.23.1"

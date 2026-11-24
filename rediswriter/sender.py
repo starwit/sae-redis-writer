@@ -73,6 +73,7 @@ class Sender:
             host=self._config.host,
             port=self._config.port,
             stream_maxlen=self._config.target_stream_maxlen,
+            b64_encode=self._config.b64_encode,
             **self._redis_args
         )
 
@@ -112,12 +113,13 @@ class Sender:
     def _get_next_batch(self):
         batch = []
         batch_bytes = 0
+        # Assume 33% overhead for b64 encoding
+        encoding_overhead = 1.33 if self._config.b64_encode else 1.0
         try:
             while len(batch) < self._config.buffer_length: 
                 entry = self._buffer.popleft()
                 batch.append(entry)
-                # Assume 33% overhead for b64 encoding
-                batch_bytes += round(len(entry.msg_bytes) * 1.33) + len(entry.stream_key)
+                batch_bytes += round(len(entry.msg_bytes) * encoding_overhead) + len(entry.stream_key)
         except IndexError:
             pass
 
