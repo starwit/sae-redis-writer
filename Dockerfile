@@ -4,25 +4,22 @@ FROM starwitorg/base-python-image:0.0.15 AS build
 COPY poetry.lock poetry.toml pyproject.toml /code/
 
 WORKDIR /code
-RUN poetry install
-    
-# Copy the rest of the project
-COPY . /code/
+# Install runtime dependencies only (no dev group) and strip pip from the venv
+RUN poetry install --only main --no-root && \
+    rm -rf .venv/lib/python3.12/site-packages/pip* .venv/bin/pip*
 
 
 ### Main artifact / deliverable image
 
 FROM python:3.12-slim
-RUN apt update && apt install --no-install-recommends -y \
-    libglib2.0-0 \
-    libgl1 \
-    libturbojpeg0
 
 # Create a non-root user and group
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-COPY --from=build --chown=appuser:appgroup /code /code
 WORKDIR /code
+COPY --from=build --chown=appuser:appgroup /code/.venv /code/.venv
+COPY --chown=appuser:appgroup main.py /code/
+COPY --chown=appuser:appgroup rediswriter /code/rediswriter
 
 # Switch to non-root user
 USER appuser
