@@ -37,6 +37,10 @@ export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
 If you want to run the tests through VSCode you have to run the action `Python: Configure Tests` and select `pytest`. The Variables above can be supplied by putting an `.env` file into the project root directory.
 
 ## Changelog
+### 2.2.0
+- Update vision-lib to 1.4.0
+- Add config option `target_redis.b64_encode` (default `true`). If set to `false`, raw protobuf bytes are written to field `proto_data` instead of base64 into `proto_data_b64`
+
 ### 2.1.3
 - Add metric `redis_writer_output_buffer_size` to track the number of buffered messages
 

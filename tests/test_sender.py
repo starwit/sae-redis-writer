@@ -113,3 +113,36 @@ def test_bug_all_dropped_1904(publisher_mock, config):
     # Verify that 'key1' message has been sent after the unexpected exception
     assert len(publisher_mock.mock_calls) == 2
     assert publisher_mock.call_args_list[1].args[0][0].stream_key == 'key1'
+
+@pytest.fixture
+def publisher_class_mock():
+    with patch('rediswriter.sender.ValkeyPipelinePublisher') as mock_publisher:
+        yield mock_publisher
+
+def test_b64_encode_default_enabled(publisher_class_mock, config):
+    assert config.target_redis.b64_encode is True
+
+    with Sender(config):
+        time.sleep(0.1)
+
+    assert publisher_class_mock.call_args.kwargs['b64_encode'] is True
+
+def test_b64_encode_disabled(publisher_class_mock, config):
+    config.target_redis.b64_encode = False
+
+    with Sender(config):
+        time.sleep(0.1)
+
+    assert publisher_class_mock.call_args.kwargs['b64_encode'] is False
+
+@pytest.mark.parametrize('b64_encode, expected_bytes', [(True, 133 + 3), (False, 100 + 3)])
+def test_published_bytes_estimate(publisher_mock, config, b64_encode, expected_bytes):
+    config.target_redis.b64_encode = b64_encode
+    testee = Sender(config)
+
+    with patch('rediswriter.sender.REDIS_PUBLISH_BYTES_SENT') as bytes_counter:
+        with testee as publish:
+            publish('key', b'x' * 100)
+            time.sleep(0.1)
+
+    bytes_counter.inc.assert_called_once_with(expected_bytes)
